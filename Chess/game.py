@@ -30,7 +30,7 @@ class Chess:
             self.board[1][j] = Piece("pawn", "b", 1, j)
             self.board[6][j] = Piece("pawn", "w", 6, j)
 
-        # Bishop
+            # Bishop
         self.board[0][2] = Piece("bishop", "b", 0, 2)
         self.board[0][5] = Piece("bishop", "b", 0, 5)
         self.board[7][2] = Piece("bishop", "w", 7, 2)
@@ -72,5 +72,233 @@ class Chess:
                     print('  .  ', end=" ")
             print()
 
+    def get_bishop_moves(self, row, col):
+        valid_moves = []
+        for i in range(1, 8):
+            # Check the diagonal going up and to the right
+            if (row - i >= 0 and col + i <= 7):
+                if (self.board[row - i][col + i] == None):
+                    valid_moves.append((row - i, col + i))
+                elif (self.board[row - i][col + i].color != self.board[row][col].color):
+                    valid_moves.append((row - i, col + i))
+                    # break
+                # else:
+                #    break
+            # Check the diagonal going up and to the left
+            if (row - i >= 0 and col - i >= 0):
+                if (self.board[row - i][col - i] == None):
+                    valid_moves.append((row - i, col - i))
+                elif (self.board[row - i][col - i].color != self.board[row][col].color):
+                    valid_moves.append((row - i, col - i))
+                    # break
+                # else:
+                #    break
+            # Check the diagonal going down and to the right
+            if (row + i <= 7 and col + i <= 7):
+                if (self.board[row + i][col + i] == None):
+                    valid_moves.append((row + i, col + i))
+                elif (self.board[row + i][col + i].color != self.board[row][col].color):
+                    valid_moves.append((row + i, col + i))
+                    # break
+                # else:
+                #    break
+            # Check the diagonal going down and to the left
+            if (row + i <= 7 and col - i >= 0):
+                if (self.board[row + i][col - i] == None):
+                    valid_moves.append((row + i, col - i))
+                elif (self.board[row + i][col - i].color != self.board[row][col].color):
+                    valid_moves.append((row + i, col - i))
+                    # break
+                # else:
+                #    break
+        return valid_moves
+
+    ###
+    # Define a function to generate all possible moves for a pawn, king and knight on a given position
+    ###
+    def get_moves(self, piece, color, row, col):
+        valid_moves = []
+        x = 1  # variable to def direction of the pieces
+        # Define the moves for each piece
+        moves = {
+            'pawn': [(1, 0)],
+            'knight': [(2, 1), (1, 2), (-1, 2), (-2, 1), (-2, -1), (-1, -2), (1, -2), (2, -1)],
+            'king': [(1, 0), (0, 1), (-1, 0), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)],
+        }
+
+        if (color == 'w'):
+            x = -1
+
+        for move in moves[piece]:
+            new_row = row + (move[0]*x)
+            new_col = col + (move[1]*x)
+            if (new_row < 0 or new_row > 7 or new_col < 0 or new_col > 7):
+                continue
+            if (self.board[new_row][new_col] == None):
+                valid_moves.append((new_row, new_col))
+            elif (self.board[new_row][new_col].color != self.board[row][col].color):
+                valid_moves.append((new_row, new_col))
+
+        if (piece == "pawn" and (row == 1 or row == 6)):
+            valid_moves = []
+            valid_moves.append((row + (move[0]*x), col))
+            valid_moves.append((row + (move[0]*x) + x, col))
+
+        return valid_moves
+
+    def get_rook_moves(self, row, col):
+        valid_moves = []
+        # Check moves going up
+        for i in range(row-1, -1, -1):
+            if (self.board[i][col] == None):
+                valid_moves.append((i, col))
+            elif (self.board[i][col].color != self.board[row][col].color):
+                valid_moves.append((i, col))
+                break
+            else:
+                break
+        # Check moves going down
+        for i in range(row+1, 8):
+            if (self.board[i][col] == None):
+                valid_moves.append((i, col))
+            elif (self.board[i][col].color != self.board[row][col].color):
+                valid_moves.append((i, col))
+                break
+            else:
+                break
+        # Check moves going left
+        for j in range(col-1, -1, -1):
+            if (self.board[row][j] == None):
+                valid_moves.append((row, j))
+            elif (self.board[row][j].color != self.board[row][col].color):
+                valid_moves.append((row, j))
+                break
+            else:
+                break
+        # Check moves going right
+        for j in range(col+1, 8):
+            if (self.board[row][j] == None):
+                valid_moves.append((row, j))
+            elif (self.board[row][j].color != self.board[row][col].color):
+                valid_moves.append((row, j))
+                break
+            else:
+                break
+        return valid_moves
+
+    def get_queen_moves(self, row, col):
+        valid_moves = []
+        # Check moves going up
+        for r in range(row-1, -1, -1):
+            if (self.board[r][col] == None):
+                valid_moves.append((r, col))
+            elif (self.board[r][col].color != self.board[row][col].color):
+                valid_moves.append((r, col))
+                break
+            else:
+                break
+        # Check moves going down
+        for r in range(row+1, 8):
+            if (self.board[r][col] == None):
+                valid_moves.append((r, col))
+            elif (self.board[r][col].color != self.board[row][col].color):
+                valid_moves.append((r, col))
+                break
+            else:
+                break
+        # Check moves going left
+        for c in range(col-1, -1, -1):
+            if (self.board[row][c] == None):
+                valid_moves.append((row, c))
+            elif (self.board[row][c].color != self.board[row][col].color):
+                valid_moves.append((row, c))
+                break
+            else:
+                break
+        # Check moves going right
+        for c in range(col+1, 8):
+            if (self.board[row][c] == None):
+                valid_moves.append((row, c))
+            elif (self.board[row][c].color != self.board[row][col].color):
+                valid_moves.append((row, c))
+                break
+            else:
+                break
+        # Check moves going up and to the left
+        r, c = row-1, col-1
+        while r >= 0 and c >= 0:
+            if (self.board[r][c] == None):
+                valid_moves.append((r, c))
+            elif (self.board[r][c].color != self.board[row][col].color):
+                valid_moves.append((r, c))
+                break
+            else:
+                break
+            r -= 1
+            c -= 1
+        # Check moves going up and to the right
+        r, c = row-1, col+1
+        while r >= 0 and c <= 7:
+            if (self.board[r][c] == None):
+                valid_moves.append((r, c))
+            elif (self.board[r][c].color != self.board[row][col].color):
+                valid_moves.append((r, c))
+                break
+            else:
+                break
+            r -= 1
+            c += 1
+        # Check moves going down and to the left
+        r, c = row+1, col-1
+        while r <= 7 and c >= 0:
+            if (self.board[r][c] == None):
+                valid_moves.append((r, c))
+            elif (self.board[r][c].color != self.board[row][col].color):
+                valid_moves.append((r, c))
+                break
+            else:
+                break
+            r += 1
+            c -= 1
+        # Check moves going down and to the right
+        r, c = row+1, col+1
+        while r <= 7 and c <= 7:
+            if (self.board[r][c] == None):
+                valid_moves.append((r, c))
+            elif (self.board[r][c].color != self.board[row][col].color):
+                valid_moves.append((r, c))
+                break
+            else:
+                break
+            r += 1
+            c += 1
+        return valid_moves
+
+    def move_piece(self, origin_row, origin_col, row, col):
+        self.board[row][col] = self.board[origin_row][origin_col]
+        self.board[origin_row][origin_col] = None
+        return 0
+
+    def can_pawn_eat(self, row, col):
+        can_eat = []
+        direction = 1
+        if (self.board[row][col] != None and self.board[row][col].color == 'w'):
+            direction = -1
+
+        new_row = row+direction
+        if (self.board[new_row][col-1] != None):
+            if (self.board[new_row][col-1].color != self.board[row][col]):
+                can_eat.append((row+direction, col-1))
+        if (self.board[new_row][col+1] != None):
+            if (self.board[new_row][col+1].color != self.board[row][col]):
+                can_eat.append((new_row, col+1))
+
+        return can_eat
+
 
 # chess = Chess()
+# valid = []
+# valid.append((2, 4))
+# Test the function with a pawn on row 1, column 2
+# print(valid)
+# print(valid[0] in chess.get_moves("pawn", "b", 1, 4))

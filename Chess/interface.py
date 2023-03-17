@@ -10,8 +10,8 @@ class UI:
         self._running = True
         self.screen = None
         self.size = self.weight, self.height = 720, 720
-        self.fixed_pos_x = 20
-        self.fixed_pos_y = 20
+        self.offset_pos_x = 20
+        self.offset_pos_y = 20
         self.piece_size = 85
         pygame.init()
 
@@ -19,11 +19,11 @@ class UI:
     def on_init(self):
         self.screen = pygame.display.set_mode(
             self.size, pygame.HWSURFACE | pygame.DOUBLEBUF)
-        self.put_images_on_screen(self.controller.get_board())
+        self.update_screen(self.controller.get_board())
         self._running = True
 
     # This method receives a board and update the screen according to the board
-    def put_images_on_screen(self, board):
+    def update_screen(self, board):
         # board
         imp = pygame.image.load(
             "img/board.jpg").convert()
@@ -40,14 +40,19 @@ class UI:
                         "img/"+board[i][j].color + "_" + board[i][j].type + ".png")
 
                     # Set the position of the piece
-                    piece_position = (self.fixed_pos_x+(self.piece_size*j),
-                                      self.fixed_pos_y+(self.piece_size*i))
+                    piece_position = (self.offset_pos_x+(self.piece_size*j),
+                                      self.offset_pos_y+(self.piece_size*i))
                     self.screen.blit(piece_image, piece_position)
 
         # Update the display
         pygame.display.update()
 
-    # def of events in screen
+    # def update_screen_possible_moves(self, board):
+
+    ###
+    #  def of events in screen
+    ###
+
     def on_event(self, event):
         if event.type == pygame.QUIT:
             self._running = False
@@ -55,12 +60,14 @@ class UI:
         if event.type == pygame.MOUSEBUTTONDOWN:
             pos = pygame.mouse.get_pos()
             btn = pygame.mouse
-            print("x = {} board: {}, y = {}  board: {}, btn: {}".format(
+            print("col = {} board: {}, row = {}  board: {}, btn: {}".format(
                 pos[0], pos[0]//85, pos[1], pos[1]//85, btn.get_pressed()))
-
+            if (pos[0]//85 >= 0 and pos[0]//85 <= 7 and pos[1]//85 >= 0 and pos[1]//85 <= 7):
+                self.controller.select_piece(pos[1]//85, pos[0]//85)
             # on pressed call the controller to update the view with possible moves
+            self.update_screen(self.controller.get_board())
 
-    # Method to clean up modules of pygame
+            # Method to clean up modules of pygame
     def on_cleanup(self):
         pygame.quit()
 
