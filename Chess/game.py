@@ -10,9 +10,15 @@ from piece import Piece
 class Chess:
     board = None
 
+    ###
+    # Constructor
+    ###
     def __init__(self):
         self.start_board()
 
+    ###
+    # Create the board for the chess game
+    ###
     def start_board(self):
         # def of pieces in the board
         self.board = np.array([[None] * 8,
@@ -56,11 +62,17 @@ class Chess:
         self.board[0][4] = Piece("king", "b", 0, 4)
         self.board[7][4] = Piece("king", "w", 7, 4)
 
-        self.print_board()
+        # self.print_board()
 
+    ###
+    # Return the board of the game
+    ###
     def get_board(self):
         return self.board
 
+    ###
+    # Print the board in console
+    ###
     def print_board(self):
         for i in range(len(self.board)):
             # Iterate over each column of the current row
@@ -72,6 +84,9 @@ class Chess:
                     print('  .  ', end=" ")
             print()
 
+    ###
+    # Return the possible moves of the bishop given a row, col position
+    ###
     def get_bishop_moves(self, row, col):
         valid_moves = []
 
@@ -120,6 +135,9 @@ class Chess:
                     break
         return valid_moves
 
+    ###
+    # Return the possible moves of the pawn given a row, col position
+    ###
     def get_pawn_moves(self, color, row, col):
         valid_moves = []
         x = 1  # variable to def direction of the pieces
@@ -147,7 +165,7 @@ class Chess:
         return valid_moves
 
     ###
-    # Define a function to generate all possible moves for a pawn, king and knight on a given position
+    # Define a function to generate all possible moves for the king and knight on a given position
     ###
     def get_moves(self, piece, color, row, col):
         valid_moves = []
@@ -178,6 +196,9 @@ class Chess:
 
         return valid_moves
 
+    ###
+    # Return the possible moves of the rook given a row, col position
+    ###
     def get_rook_moves(self, row, col):
         valid_moves = []
         # Check moves going up
@@ -218,6 +239,9 @@ class Chess:
                 break
         return valid_moves
 
+    ###
+    # Return the possible moves of the queen given a row, col position
+    ###
     def get_queen_moves(self, row, col):
         valid_moves = []
         # Check moves going up
@@ -306,11 +330,17 @@ class Chess:
             c += 1
         return valid_moves
 
+    ###
+    # Move a piece from position origin_row, origin_col to row, col
+    ###
     def move_piece(self, origin_row, origin_col, row, col):
         self.board[row][col] = self.board[origin_row][origin_col]
         self.board[origin_row][origin_col] = None
         return 0
 
+    ###
+    # Checks if a pawn in position row, col has a possibility to eat another piece
+    ###
     def can_pawn_eat(self, row, col, current_player):
         can_eat = []
         direction = 1

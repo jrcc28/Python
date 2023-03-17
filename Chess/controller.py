@@ -10,6 +10,9 @@ from interface import UI
 
 class Controller:
 
+    ###
+    # Constructor of class Controller
+    ###
     def __init__(self):
         self.selected_piece_row = -1
         self.selected_piece_col = -1
@@ -20,9 +23,15 @@ class Controller:
         self.interface = UI(self)
         self.interface.on_execute()
 
+    ###
+    # Method to get the board of the game
+    ###
     def get_board(self):
         return self.chess.get_board()
 
+    ###
+    # Checks possible moves for a selected piece
+    ###
     def first_move(self, row, col, board):
         self.possible_moves = []
         self.selected_piece_row = row
@@ -51,6 +60,9 @@ class Controller:
                 self.possible_moves = self.chess.get_moves(
                     board[row][col].type, board[row][col].color, row, col)
 
+    ###
+    # Checks if it is possible the movement of a piece
+    ###
     def second_move(self, row, col, board):
         self.selected_piece = False
         if (self.current_player == "w"):
@@ -70,6 +82,9 @@ class Controller:
                 self.current_player = "w"
         self.possible_moves = []
 
+    ###
+    # Checks if it is the first click or the second click to move a piece
+    ###
     def select_piece(self, row, col):
         print(f'origin: {self.selected_piece_row}, {self.selected_piece_col}')
         print(f'destiny: {row}, {col}')

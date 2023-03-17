@@ -1,10 +1,13 @@
 import pygame
-# pygame
+
 # muestra tablero
 # envia pos de mov al controller
 
-
 class UI:
+
+    ###
+    # Constructor for class UI
+    ###
     def __init__(self, controller):
         self.controller = controller
         self._running = True
@@ -15,14 +18,18 @@ class UI:
         self.piece_size = 85
         pygame.init()
 
-    # method to display the screen
+    ###
+    #  Method to display the screen
+    ###
     def on_init(self):
         self.screen = pygame.display.set_mode(
             self.size, pygame.HWSURFACE | pygame.DOUBLEBUF)
         self.update_screen(self.controller.get_board(), [])
         self._running = True
 
-    # This method receives a board and update the screen according to the board
+    ###
+    #  This method receives a board and possible moves for a piece that was selected and update the screen according to the data
+    ###
     def update_screen(self, board, possible_moves):
         # board
         imp = pygame.image.load(
@@ -48,6 +55,9 @@ class UI:
         self.update_screen_possible_moves(possible_moves)
         pygame.display.update()
 
+    ###
+    # Update the screen adding a guide for possible moves for a piece
+    ###
     def update_screen_possible_moves(self, possible_moves):
         # Update screen with possible moves
         for move in (possible_moves):
@@ -59,13 +69,9 @@ class UI:
                               self.offset_pos_y+28+(self.piece_size*int(move[0])))
             self.screen.blit(piece_image, piece_position)
 
-        # Update the display
-        # pygame.display.update()
-
     ###
-    #  def of events in screen
+    #  def of events received from screen
     ###
-
     def on_event(self, event):
         if event.type == pygame.QUIT:
             self._running = False
@@ -80,16 +86,18 @@ class UI:
             if ((pos[0]-self.offset_pos_x)//85 >= 0 and (pos[0]-self.offset_pos_x)//85 <= 7 and (pos[1]-self.offset_pos_x)//85 >= 0 and (pos[1]-self.offset_pos_x)//85 <= 7):
                 possible_moves = self.controller.select_piece(
                     ((pos[1]-self.offset_pos_y)//85), (pos[0]-self.offset_pos_x)//85)
-                # on pressed call the controller to update the view with possible moves
-                # self.update_screen_possible_moves(possible_moves)
 
             self.update_screen(board, possible_moves)
 
-            # Method to clean up modules of pygame
+    ###
+    #  Method to clean up modules of pygame
+    ###
     def on_cleanup(self):
         pygame.quit()
 
-    # method to execute the screen of the game and read events
+    ###
+    #  method to execute the screen of the game and read events
+    ###
     def on_execute(self):
         if self.on_init() == False:
             self._running = False
@@ -97,6 +105,4 @@ class UI:
         while (self._running):
             for event in pygame.event.get():
                 self.on_event(event)
-            # self.on_loop()
-            # self.on_render()
         self.on_cleanup()
