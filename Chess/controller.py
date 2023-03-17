@@ -24,9 +24,11 @@ class Controller:
         return self.chess.get_board()
 
     def first_move(self, row, col, board):
+        self.possible_moves = []
         self.selected_piece_row = row
         self.selected_piece_col = col
         self.selected_piece = True
+
         match board[row][col].type:
             case "rook":
                 print("calling rook moves")
@@ -40,6 +42,10 @@ class Controller:
                 print("calling bishop moves")
                 self.possible_moves = self.chess.get_bishop_moves(
                     row, col)
+            case "pawn":
+                print("calling pawn moves")
+                self.possible_moves = self.chess.get_pawn_moves(self.current_player,
+                                                                row, col)
             case _:
                 print("calling other moves")
                 self.possible_moves = self.chess.get_moves(
@@ -62,11 +68,13 @@ class Controller:
                 self.chess.move_piece(
                     self.selected_piece_row, self.selected_piece_col, row, col)
                 self.current_player = "w"
+        self.possible_moves = []
 
     def select_piece(self, row, col):
-        print(self.selected_piece_row, self.selected_piece_col)
-        print(row, col)
+        print(f'origin: {self.selected_piece_row}, {self.selected_piece_col}')
+        print(f'destiny: {row}, {col}')
         board = self.get_board()
+
         # Another piece was selected, the var selected_piece will be reset
         if (self.selected_piece and board[row][col] != None and board[row][col].color == self.current_player):
             self.selected_piece = False
@@ -74,11 +82,13 @@ class Controller:
         if (self.selected_piece and (board[row][col] == None or board[self.selected_piece_row][self.selected_piece_col].color == self.current_player)):
             self.second_move(row, col, board)
         else:  # It is the first move
+            if (board[row][col] != None and board[row, col].color != self.current_player):
+                return []
             if (board[row][col] != None and board[row][col].color == self.current_player):
                 self.first_move(row, col, board)
             # check if the selected piece is pawn, so we need to check if there are pieces to eat
-            if (board[row, col].type == "pawn"):
-                for move in self.chess.can_pawn_eat(row, col):
+            if (board[row][col] != None and board[row, col].type == "pawn"):
+                for move in self.chess.can_pawn_eat(row, col, self.current_player):
                     self.possible_moves.append(move)
 
         print(self.possible_moves)

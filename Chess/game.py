@@ -74,6 +74,7 @@ class Chess:
 
     def get_bishop_moves(self, row, col):
         valid_moves = []
+
         for i in range(1, 8):
             # Check the diagonal going up and to the right
             if (row - i >= 0 and col + i <= 7):
@@ -81,36 +82,68 @@ class Chess:
                     valid_moves.append((row - i, col + i))
                 elif (self.board[row - i][col + i].color != self.board[row][col].color):
                     valid_moves.append((row - i, col + i))
-                    # break
-                # else:
-                #    break
+                    break
+                else:
+                    break
+
+        for i in range(1, 8):
             # Check the diagonal going up and to the left
             if (row - i >= 0 and col - i >= 0):
                 if (self.board[row - i][col - i] == None):
                     valid_moves.append((row - i, col - i))
                 elif (self.board[row - i][col - i].color != self.board[row][col].color):
                     valid_moves.append((row - i, col - i))
-                    # break
-                # else:
-                #    break
+                    break
+                else:
+                    break
+
+        for i in range(1, 8):
             # Check the diagonal going down and to the right
             if (row + i <= 7 and col + i <= 7):
                 if (self.board[row + i][col + i] == None):
                     valid_moves.append((row + i, col + i))
                 elif (self.board[row + i][col + i].color != self.board[row][col].color):
                     valid_moves.append((row + i, col + i))
-                    # break
-                # else:
-                #    break
+                    break
+                else:
+                    break
+
+        for i in range(1, 8):
             # Check the diagonal going down and to the left
             if (row + i <= 7 and col - i >= 0):
                 if (self.board[row + i][col - i] == None):
                     valid_moves.append((row + i, col - i))
                 elif (self.board[row + i][col - i].color != self.board[row][col].color):
                     valid_moves.append((row + i, col - i))
-                    # break
-                # else:
-                #    break
+                    break
+                else:
+                    break
+        return valid_moves
+
+    def get_pawn_moves(self, color, row, col):
+        valid_moves = []
+        x = 1  # variable to def direction of the pieces
+        # Define the moves for each piece
+        move = (1, 0)
+
+        if (color == 'w'):
+            x = -1
+
+        new_row = row + (move[0]*x)
+        new_col = col + (move[1]*x)
+
+        if (not (new_row < 0 or new_row > 7 or new_col < 0 or new_col > 7)):
+            if (self.board[new_row][new_col] == None):
+                valid_moves.append((new_row, new_col))
+
+            if (row == 1 or row == 6):
+                valid_moves = []
+                if (self.board[row + (move[0]*x)][col] == None):
+                    valid_moves.append((row + (move[0]*x), col))
+                    if (self.board[row + (move[0]*x)+x][col] == None):
+                        valid_moves.append((row + (move[0]*x) + x, col))
+
+        print(f'valid moves {valid_moves}')
         return valid_moves
 
     ###
@@ -121,7 +154,6 @@ class Chess:
         x = 1  # variable to def direction of the pieces
         # Define the moves for each piece
         moves = {
-            'pawn': [(1, 0)],
             'knight': [(2, 1), (1, 2), (-1, 2), (-2, 1), (-2, -1), (-1, -2), (1, -2), (2, -1)],
             'king': [(1, 0), (0, 1), (-1, 0), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)],
         }
@@ -279,20 +311,21 @@ class Chess:
         self.board[origin_row][origin_col] = None
         return 0
 
-    def can_pawn_eat(self, row, col):
+    def can_pawn_eat(self, row, col, current_player):
         can_eat = []
         direction = 1
         if (self.board[row][col] != None and self.board[row][col].color == 'w'):
             direction = -1
 
         new_row = row+direction
-        if (self.board[new_row][col-1] != None):
+        if ((col-1) >= 0 and self.board[new_row][col-1] != None and self.board[new_row][col-1].color != current_player):
             if (self.board[new_row][col-1].color != self.board[row][col]):
                 can_eat.append((row+direction, col-1))
-        if (self.board[new_row][col+1] != None):
+        if ((col+1) <= 7 and self.board[new_row][col+1] != None and self.board[new_row][col+1].color != current_player):
             if (self.board[new_row][col+1].color != self.board[row][col]):
                 can_eat.append((new_row, col+1))
 
+        print(f'can eat {can_eat}')
         return can_eat
 
 
