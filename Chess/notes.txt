@@ -1,0 +1,21 @@
+if is_check:
+	get possible_moves for all the allies pieces. -- incluir las posiciones de los aliados que pueden bloquear
+
+check if the possible_move can block the attacker - the attacker position can be get from is_check
+
+	get possible_moves for all the enemy pieces
+	possible_moves of king - possible_moves for enemy
+
+	if possible_move can block the attacker:
+		return false //no es checkmate
+	else if possible_moves of king - moves of attacker are not empty:
+		return false //possible movement for king
+	if possible_moves of king - moves of attacker are empty:
+		return true // es checkmate
+
+check_can_king_eat:
+	simular movimiento del rey
+	if is_check:
+		no puede comer
+	else:
+		puede comer

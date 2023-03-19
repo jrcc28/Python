@@ -1,4 +1,5 @@
 import numpy as np
+import copy
 
 from piece import Piece
 
@@ -73,13 +74,13 @@ class Chess:
     ###
     # Print the board in console
     ###
-    def print_board(self):
-        for i in range(len(self.board)):
+    def print_board(self, board):
+        for i in range(len(board)):
             # Iterate over each column of the current row
-            for j in range(len(self.board[i])):
+            for j in range(len(board[i])):
                 # Access the current element of the matrix
-                if (self.board[i][j] != None):
-                    print(self.board[i][j].type, end=" ")
+                if (board[i][j] != None):
+                    print(board[i][j].type, end=" ")
                 else:
                     print('  .  ', end=" ")
             print()
@@ -161,7 +162,6 @@ class Chess:
                     if (self.board[row + (move[0]*x)+x][col] == None):
                         valid_moves.append((row + (move[0]*x) + x, col))
 
-        print(f'valid moves {valid_moves}')
         return valid_moves
 
     ###
@@ -193,6 +193,17 @@ class Chess:
             valid_moves = []
             valid_moves.append((row + (move[0]*x), col))
             valid_moves.append((row + (move[0]*x) + x, col))
+
+        if (piece == "king"):
+            if (color == 'w'):
+                all_enemy_moves = self.get_enemy_moves('b')
+            else:
+                all_enemy_moves = self.get_enemy_moves('w')
+
+            valid_moves_king = valid_moves
+            valid_moves = []
+            [valid_moves.append(elem)
+             for elem in valid_moves_king if elem not in all_enemy_moves]
 
         return valid_moves
 
@@ -358,10 +369,186 @@ class Chess:
         print(f'can eat {can_eat}')
         return can_eat
 
+    # Find the king of a given color on the board
+    def find_king(self, color):
+        for i in range(8):
+            for j in range(8):
+                if self.board[i][j] != None and self.board[i][j].color == color and self.board[i][j].type == 'king':
+                    return (i, j)
+
+    def is_check(self, board, color):
+        # Find the king of the given color on the board
+        king_pos = self.find_king(color)
+
+        # Check for attacks from pawns
+        if (king_pos != None and (king_pos[0]-1) >= 0 and (king_pos[0]+1) <= 7 and (king_pos[1]-1) >= 0 and (king_pos[1]+1) <= 7
+            and board[king_pos[0]-1][king_pos[1]-1] != None
+            and board[king_pos[0]-1][king_pos[1]+1] != None
+            and board[king_pos[0]+1][king_pos[1]-1] != None
+                and board[king_pos[0]+1][king_pos[1]+1] != None):
+            if color == 'w':
+                if king_pos[0] > 0 and king_pos[1] > 0 and board[king_pos[0]-1][king_pos[1]-1].type == 'pawn' and board[king_pos[0]-1][king_pos[1]-1].color == 'b':
+                    return True
+                if king_pos[0] > 0 and king_pos[1] < 7 and board[king_pos[0]-1][king_pos[1]+1].type == 'pawn' and board[king_pos[0]-1][king_pos[1]+1].color == 'b':
+                    return True
+            else:
+                if king_pos[0] < 7 and king_pos[1] > 0 and board[king_pos[0]+1][king_pos[1]-1].type == 'pawn' and board[king_pos[0]+1][king_pos[1]-1].color == 'w':
+                    return True
+                if king_pos[0] < 7 and king_pos[1] < 7 and board[king_pos[0]+1][king_pos[1]+1].type == 'pawn' and board[king_pos[0]+1][king_pos[1]-1].color == 'w':
+                    return True
+
+        # Check for attacks from knights
+        knight_moves = [(2, 1), (1, 2), (-1, 2), (-2, 1),
+                        (-2, -1), (-1, -2), (1, -2), (2, -1)]
+        for move in knight_moves:
+            row = king_pos[0] + move[0]
+            col = king_pos[1] + move[1]
+            if row < 0 or row > 7 or col < 0 or col > 7:
+                continue
+            if board[row][col] != None and board[row][col].color != color and board[row][col].type == 'knight':
+                return True
+
+        # Check for attacks from rooks and queens
+        directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+        for direction in directions:
+            row = king_pos[0] + direction[0]
+            col = king_pos[1] + direction[1]
+            while row >= 0 and row < 8 and col >= 0 and col < 8:
+                if board[row][col] != None:
+                    if board[row][col].color == color:
+                        break
+                    if board[row][col].type == 'rook' or board[row][col].type == 'queen':
+                        return True
+                    else:
+                        break
+                row += direction[0]
+                col += direction[1]
+
+        # Check for attacks from bishops and queens
+        directions = [(1, 1), (1, -1), (-1, 1), (-1, -1)]
+        for direction in directions:
+            row = king_pos[0] + direction[0]
+            col = king_pos[1] + direction[1]
+            while row >= 0 and row < 8 and col >= 0 and col < 8:
+                if board[row][col] != None:
+                    if board[row][col].color == color:
+                        break
+                    if board[row][col].type == 'bishop' or board[row][col].type == 'queen':
+                        return True
+                    else:
+                        break
+                row += direction[0]
+                col += direction[1]
+
+        # No attacks found, return False
+        return False
+
+    ###
+    # Get moves of the pieces of the given color
+    # This method doesn't consider king moves
+    ###
+    def get_enemy_moves(self, color):
+        moves = []
+        for row in range(8):
+            for col in range(8):
+                if (self.board[row][col] != None and self.board[row][col].color == color):
+                    [moves.append(x) for x in self.get_moves_for_one_piece(
+                        self.board[row][col].type, row, col, color, False)]
+
+        # Return a list of possible moves without duplicate values
+        return list(set(moves))
+
+    ###
+    # Get moves of the piece given in parameter
+    ###
+    def get_moves_for_one_piece(self, type, row, col, color, search_king=True):
+        moves = []
+        match type:
+            case "rook":
+                [moves.append(x) for x in self.get_rook_moves(
+                    row, col)]
+            case "queen":
+                [moves.append(x) for x in self.get_queen_moves(
+                    row, col)]
+            case "bishop":
+                [moves.append(x) for x in self.get_bishop_moves(
+                    row, col)]
+            case "pawn":
+                [moves.append(x) for x in self.get_pawn_moves(
+                    color, row, col)]
+            case _:
+                if (search_king):
+                    [moves.append(x) for x in self.get_moves(
+                        self.board[row][col].type, color, row, col)]
+                else:
+                    [moves.append(x) for x in self.get_moves(
+                        "knight", color, row, col)]
+        return moves
+
+    ###
+    # Check if the king of the given color is in checkmate
+    ###
+
+    def is_checkmate(self, color):
+        # Check if the king is in check
+        if not self.is_check(self.board, color):
+            print('It is not a check')
+            return False
+            pass
+
+        pos = self.find_king(color)
+        king_moves = self.get_moves('king', color, pos[0], pos[1])
+
+        # Check if the king can escape check
+        if (len(king_moves) > 0):
+            print(f'black king_moves {king_moves}')
+            return False
+            pass
+
+        if (color == 'w'):
+            attacking_color = 'b'
+        else:
+            attacking_color = 'w'
+
+        # for piece in board:
+        for row in range(8):
+            for col in range(8):
+                if (self.board[row][col] == None):
+                    continue
+                if (self.board[row][col].color == attacking_color):
+                    continue
+                moves = self.get_moves_for_one_piece(
+                    self.board[row][col].type, row, col, color, False)
+                print(moves)
+                for move in moves:
+                    print(
+                        f'simulating  move from {row} {col} to {move[0]}{move[1]}')
+                    new_board = self.simulate_move(row, col, move[0], move[1])
+                    if not self.is_check(new_board, color):
+                        print('it is not a check-2')
+                        return False
+
+        # If none of the above conditions are met, it's checkmate
+        return True
+
+    def simulate_move(self, origin_row, origin_col, row, col):
+        simulated_board = copy.deepcopy(self.board)
+        simulated_board[row][col] = simulated_board[origin_row][origin_col]
+        simulated_board[origin_row][origin_col] = None
+        return simulated_board
+
 
 # chess = Chess()
-# valid = []
-# valid.append((2, 4))
-# Test the function with a pawn on row 1, column 2
-# print(valid)
-# print(valid[0] in chess.get_moves("pawn", "b", 1, 4))
+# chess.move_piece(6, 4, 4, 4)
+# chess.move_piece(1, 5, 3, 5)
+# chess.move_piece(7, 3, 3, 7)
+# chess.move_piece(1, 6, 2, 7)
+# chess.print_board(chess.board)
+# # chess.move_piece(7, 6, 5, 5)
+# # chess.move_piece(0, 3, 3, 6)
+# # chess.move_piece(6, 4, 5, 4)
+# # chess.move_piece(1, 5, 2, 5)
+# # chess.move_piece(7, 3, 5, 3)
+# # chess.move_piece(0, 1, 2, 2)
+# # chess.move_piece(5, 3, 5, 0)
+# print(chess.is_checkmate('b'))

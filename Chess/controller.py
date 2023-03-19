@@ -38,27 +38,30 @@ class Controller:
         self.selected_piece_col = col
         self.selected_piece = True
 
-        match board[row][col].type:
-            case "rook":
-                print("calling rook moves")
-                self.possible_moves = self.chess.get_rook_moves(
-                    row, col)
-            case "queen":
-                print("calling queen moves")
-                self.possible_moves = self.chess.get_queen_moves(
-                    row, col)
-            case "bishop":
-                print("calling bishop moves")
-                self.possible_moves = self.chess.get_bishop_moves(
-                    row, col)
-            case "pawn":
-                print("calling pawn moves")
-                self.possible_moves = self.chess.get_pawn_moves(self.current_player,
-                                                                row, col)
-            case _:
-                print("calling other moves")
-                self.possible_moves = self.chess.get_moves(
-                    board[row][col].type, board[row][col].color, row, col)
+        self.possible_moves = self.chess.get_moves_for_one_piece(
+            board[row][col].type, row, col, board[row][col].color)
+
+        # match board[row][col].type:
+        #     case "rook":
+        #         # print("calling rook moves")
+        #         self.possible_moves = self.chess.get_rook_moves(
+        #             row, col)
+        #     case "queen":
+        #         # print("calling queen moves")
+        #         self.possible_moves = self.chess.get_queen_moves(
+        #             row, col)
+        #     case "bishop":
+        #         # print("calling bishop moves")
+        #         self.possible_moves = self.chess.get_bishop_moves(
+        #             row, col)
+        #     case "pawn":
+        #         # print("calling pawn moves")
+        #         self.possible_moves = self.chess.get_pawn_moves(self.current_player,
+        #                                                         row, col)
+        #     case _:
+        #         # print("calling other moves")
+        #         self.possible_moves = self.chess.get_moves(
+        #             board[row][col].type, board[row][col].color, row, col)
 
     ###
     # Checks if it is possible the movement of a piece
@@ -66,19 +69,19 @@ class Controller:
     def second_move(self, row, col, board):
         self.selected_piece = False
         if (self.current_player == "w"):
-            print("validating white move")
             print((row, col) in self.possible_moves)
             if ((board[row][col] == None or board[row][col].color == "b") and (row, col) in self.possible_moves):
                 print("white piece moved")
                 self.chess.move_piece(
                     self.selected_piece_row, self.selected_piece_col, row, col)
+                print(f'is check for b {self.chess.is_check(board, "b")}')
                 self.current_player = "b"
         else:
-            print("validating black move")
             if ((board[row][col] == None or board[row][col].color == "w") and (row, col) in self.possible_moves):
                 print("black piece moved")
                 self.chess.move_piece(
                     self.selected_piece_row, self.selected_piece_col, row, col)
+                print(f'is check for w {self.chess.is_check(board, "w")}')
                 self.current_player = "w"
         self.possible_moves = []
 
@@ -107,6 +110,7 @@ class Controller:
                     self.possible_moves.append(move)
 
         print(self.possible_moves)
+
         return self.possible_moves
 
 
