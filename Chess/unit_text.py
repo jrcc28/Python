@@ -1,7 +1,7 @@
 import unittest
 
-from ..Chess.game import Chess
-from ..Chess.controller import Controller
+from game import Chess
+# from controller import Controller
 
 
 class Testing(unittest.TestCase):
