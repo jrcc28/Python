@@ -1,12 +1,6 @@
 from game import Chess
 from interface import UI
 
-# recibe instrucciones de la interfaz e invoca al modelo game
-# tiene opciones para el game
-# crea new game
-# recibe un mover ficha y valida el tipo de ficha para hacer el llamado de mov al modelo
-# llama tablero para darlo a la vista
-
 
 class Controller:
 
@@ -19,6 +13,11 @@ class Controller:
         self.current_player = "w"
         self.possible_moves = []
         self.selected_piece = False
+        self.checkmate = False
+        self.winner = ''
+        self.check = False
+        self.king_in_danger = (-1, -1)
+        self.attacker = (-1, -1)
         self.chess = Chess()
         self.interface = UI(self)
         self.interface.on_execute()
@@ -28,6 +27,12 @@ class Controller:
     ###
     def get_board(self):
         return self.chess.get_board()
+
+    ###
+    # Returns the data of a check in the board
+    ###
+    def get_check_data(self):
+        return self.check, self.king_in_danger, self.attacker
 
     ###
     # Checks possible moves for a selected piece
@@ -41,28 +46,6 @@ class Controller:
         self.possible_moves = self.chess.get_moves_for_one_piece(
             board[row][col].type, row, col, board[row][col].color)
 
-        # match board[row][col].type:
-        #     case "rook":
-        #         # print("calling rook moves")
-        #         self.possible_moves = self.chess.get_rook_moves(
-        #             row, col)
-        #     case "queen":
-        #         # print("calling queen moves")
-        #         self.possible_moves = self.chess.get_queen_moves(
-        #             row, col)
-        #     case "bishop":
-        #         # print("calling bishop moves")
-        #         self.possible_moves = self.chess.get_bishop_moves(
-        #             row, col)
-        #     case "pawn":
-        #         # print("calling pawn moves")
-        #         self.possible_moves = self.chess.get_pawn_moves(self.current_player,
-        #                                                         row, col)
-        #     case _:
-        #         # print("calling other moves")
-        #         self.possible_moves = self.chess.get_moves(
-        #             board[row][col].type, board[row][col].color, row, col)
-
     ###
     # Checks if it is possible the movement of a piece
     ###
@@ -74,23 +57,47 @@ class Controller:
                 print("white piece moved")
                 self.chess.move_piece(
                     self.selected_piece_row, self.selected_piece_col, row, col)
-                print(f'is check for b {self.chess.is_check(board, "b")}')
+                # print(f'is check for b {self.check}')
                 self.current_player = "b"
         else:
             if ((board[row][col] == None or board[row][col].color == "w") and (row, col) in self.possible_moves):
                 print("black piece moved")
                 self.chess.move_piece(
                     self.selected_piece_row, self.selected_piece_col, row, col)
-                print(f'is check for w {self.chess.is_check(board, "w")}')
+                # print(f'is check for w {self.check}')
                 self.current_player = "w"
+
+        # Verify a check
+        self.check, self.king_in_danger, self.attacker = self.chess.is_check(
+            board, "w")
+        if (not self.check):
+            self.check, self.king_in_danger, self.attacker = self.chess.is_check(
+                board, "b")
+
+        # Check the board for a checkmate
+        self.checkmate = self.chess.is_checkmate(
+            "b") or self.chess.is_checkmate("w")
+
+        if (self.checkmate):
+            print('Checkmate!')
+            if (self.current_player == 'w'):
+                self.winner = "White"
+            else:
+                self.winner = 'Black'
+
         self.possible_moves = []
 
     ###
     # Checks if it is the first click or the second click to move a piece
     ###
     def select_piece(self, row, col):
-        print(f'origin: {self.selected_piece_row}, {self.selected_piece_col}')
-        print(f'destiny: {row}, {col}')
+        # print(f'origin: {self.selected_piece_row}, {self.selected_piece_col}')
+        # print(f'destiny: {row}, {col}')
+
+        if (self.checkmate):
+            print('There is a winner')
+            return []
+
         board = self.get_board()
 
         # Another piece was selected, the var selected_piece will be reset
@@ -109,9 +116,22 @@ class Controller:
                 for move in self.chess.can_pawn_eat(row, col, self.current_player):
                     self.possible_moves.append(move)
 
-        print(self.possible_moves)
-
+        # print(self.possible_moves)
         return self.possible_moves
+
+    def restart(self):
+        del self.chess
+        self.chess = Chess()
+        self.selected_piece_row = -1
+        self.selected_piece_col = -1
+        self.current_player = "w"
+        self.possible_moves = []
+        self.selected_piece = False
+        self.checkmate = False
+        self.winner = ''
+        self.check = False
+        self.king_in_danger = (-1, -1)
+        self.attacker = (-1, -1)
 
 
 if __name__ == "__main__":

@@ -3,10 +3,6 @@ import copy
 
 from piece import Piece
 
-# fichas
-# tablero - done
-# logica
-
 
 class Chess:
     board = None
@@ -139,7 +135,7 @@ class Chess:
     ###
     # Return the possible moves of the pawn given a row, col position
     ###
-    def get_pawn_moves(self, color, row, col):
+    def get_pawn_moves(self, color, row, col, check=False):
         valid_moves = []
         x = 1  # variable to def direction of the pieces
         # Define the moves for each piece
@@ -162,7 +158,38 @@ class Chess:
                     if (self.board[row + (move[0]*x)+x][col] == None):
                         valid_moves.append((row + (move[0]*x) + x, col))
 
+        if (check):
+            valid_moves = self.can_pawn_eat(row, col, color)
+
         return valid_moves
+
+    ###
+    # Checks if a pawn in position row, col has a possibility to eat another piece
+    ###
+    def can_pawn_eat(self, row, col, current_player, king=False):
+        can_eat = []
+        direction = 1
+        if (self.board[row][col] != None and self.board[row][col].color == 'w'):
+            direction = -1
+
+        new_row = row+direction
+        if ((col-1) >= 0 and self.board[new_row][col-1] != None and self.board[new_row][col-1].color != current_player):
+            if (self.board[new_row][col-1].color != self.board[row][col]):
+                can_eat.append((row+direction, col-1))
+        if ((col+1) <= 7 and self.board[new_row][col+1] != None and self.board[new_row][col+1].color != current_player):
+            if (self.board[new_row][col+1].color != self.board[row][col]):
+                can_eat.append((new_row, col+1))
+
+        if (king):
+            can_eat = []
+            if ((col-1) >= 0):
+                can_eat.append((row+direction, col-1))
+
+            if ((col+1) <= 7):
+                can_eat.append((row+direction, col+1))
+
+        # print(f'can eat {can_eat}')
+        return can_eat
 
     ###
     # Define a function to generate all possible moves for the king and knight on a given position
@@ -350,32 +377,17 @@ class Chess:
         return 0
 
     ###
-    # Checks if a pawn in position row, col has a possibility to eat another piece
+    #  Find the king of a given color on the board
     ###
-    def can_pawn_eat(self, row, col, current_player):
-        can_eat = []
-        direction = 1
-        if (self.board[row][col] != None and self.board[row][col].color == 'w'):
-            direction = -1
-
-        new_row = row+direction
-        if ((col-1) >= 0 and self.board[new_row][col-1] != None and self.board[new_row][col-1].color != current_player):
-            if (self.board[new_row][col-1].color != self.board[row][col]):
-                can_eat.append((row+direction, col-1))
-        if ((col+1) <= 7 and self.board[new_row][col+1] != None and self.board[new_row][col+1].color != current_player):
-            if (self.board[new_row][col+1].color != self.board[row][col]):
-                can_eat.append((new_row, col+1))
-
-        print(f'can eat {can_eat}')
-        return can_eat
-
-    # Find the king of a given color on the board
     def find_king(self, color):
         for i in range(8):
             for j in range(8):
                 if self.board[i][j] != None and self.board[i][j].color == color and self.board[i][j].type == 'king':
                     return (i, j)
 
+    ###
+    # Verify is there is a check in the board
+    ###
     def is_check(self, board, color):
         # Find the king of the given color on the board
         king_pos = self.find_king(color)
@@ -388,14 +400,14 @@ class Chess:
                 and board[king_pos[0]+1][king_pos[1]+1] != None):
             if color == 'w':
                 if king_pos[0] > 0 and king_pos[1] > 0 and board[king_pos[0]-1][king_pos[1]-1].type == 'pawn' and board[king_pos[0]-1][king_pos[1]-1].color == 'b':
-                    return True
+                    return True, king_pos, (king_pos[0]-1, king_pos[1]-1)
                 if king_pos[0] > 0 and king_pos[1] < 7 and board[king_pos[0]-1][king_pos[1]+1].type == 'pawn' and board[king_pos[0]-1][king_pos[1]+1].color == 'b':
-                    return True
+                    return True, king_pos, (king_pos[0]-1, king_pos[1]+1)
             else:
                 if king_pos[0] < 7 and king_pos[1] > 0 and board[king_pos[0]+1][king_pos[1]-1].type == 'pawn' and board[king_pos[0]+1][king_pos[1]-1].color == 'w':
-                    return True
+                    return True, king_pos, (king_pos[0]+1, king_pos[1]-1)
                 if king_pos[0] < 7 and king_pos[1] < 7 and board[king_pos[0]+1][king_pos[1]+1].type == 'pawn' and board[king_pos[0]+1][king_pos[1]-1].color == 'w':
-                    return True
+                    return True, king_pos, (king_pos[0]+1, king_pos[1]+1)
 
         # Check for attacks from knights
         knight_moves = [(2, 1), (1, 2), (-1, 2), (-2, 1),
@@ -406,7 +418,7 @@ class Chess:
             if row < 0 or row > 7 or col < 0 or col > 7:
                 continue
             if board[row][col] != None and board[row][col].color != color and board[row][col].type == 'knight':
-                return True
+                return True, king_pos, (row, col)
 
         # Check for attacks from rooks and queens
         directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
@@ -418,7 +430,7 @@ class Chess:
                     if board[row][col].color == color:
                         break
                     if board[row][col].type == 'rook' or board[row][col].type == 'queen':
-                        return True
+                        return True, king_pos, (row, col)
                     else:
                         break
                 row += direction[0]
@@ -434,18 +446,19 @@ class Chess:
                     if board[row][col].color == color:
                         break
                     if board[row][col].type == 'bishop' or board[row][col].type == 'queen':
-                        return True
+                        return True, king_pos, (row, col)
                     else:
                         break
                 row += direction[0]
                 col += direction[1]
 
         # No attacks found, return False
-        return False
+        return (False, (-1, -1), (-1, -1))
 
     ###
     # Get moves of the pieces of the given color
     # This method doesn't consider king moves
+    # Also, gives the moves where a pawn can eat
     ###
     def get_enemy_moves(self, color):
         moves = []
@@ -460,6 +473,8 @@ class Chess:
 
     ###
     # Get moves of the piece given in parameter
+    # search_king indicates that we will look for moves of the king, other case that it is false
+    # we will look only for moves of the knight. Also, if it is false, we will get the moves where the pawn can eat
     ###
     def get_moves_for_one_piece(self, type, row, col, color, search_king=True):
         moves = []
@@ -474,8 +489,12 @@ class Chess:
                 [moves.append(x) for x in self.get_bishop_moves(
                     row, col)]
             case "pawn":
-                [moves.append(x) for x in self.get_pawn_moves(
-                    color, row, col)]
+                if (search_king):
+                    [moves.append(x) for x in self.get_pawn_moves(
+                        color, row, col)]
+                else:  # Check for possible positions that the pawn can eat
+                    [moves.append(x) for x in self.can_pawn_eat(
+                        row, col, color, True)]
             case _:
                 if (search_king):
                     [moves.append(x) for x in self.get_moves(
@@ -488,22 +507,19 @@ class Chess:
     ###
     # Check if the king of the given color is in checkmate
     ###
-
     def is_checkmate(self, color):
         # Check if the king is in check
-        if not self.is_check(self.board, color):
-            print('It is not a check')
+        if not self.is_check(self.board, color)[0]:
+            # print('It is not a check')
             return False
-            pass
 
         pos = self.find_king(color)
         king_moves = self.get_moves('king', color, pos[0], pos[1])
 
         # Check if the king can escape check
         if (len(king_moves) > 0):
-            print(f'black king_moves {king_moves}')
+            # print(f'black king_moves {king_moves}')
             return False
-            pass
 
         if (color == 'w'):
             attacking_color = 'b'
@@ -519,18 +535,19 @@ class Chess:
                     continue
                 moves = self.get_moves_for_one_piece(
                     self.board[row][col].type, row, col, color, False)
-                print(moves)
+                # print(moves)
                 for move in moves:
-                    print(
-                        f'simulating  move from {row} {col} to {move[0]}{move[1]}')
                     new_board = self.simulate_move(row, col, move[0], move[1])
-                    if not self.is_check(new_board, color):
-                        print('it is not a check-2')
+                    if not self.is_check(new_board, color)[0]:
+                        # print('There are possible moves or blocks')
                         return False
 
         # If none of the above conditions are met, it's checkmate
         return True
 
+    ###
+    # Simulate a move of a piece on the board
+    ###
     def simulate_move(self, origin_row, origin_col, row, col):
         simulated_board = copy.deepcopy(self.board)
         simulated_board[row][col] = simulated_board[origin_row][origin_col]

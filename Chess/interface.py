@@ -3,6 +3,7 @@ import pygame
 # muestra tablero
 # envia pos de mov al controller
 
+
 class UI:
 
     ###
@@ -12,16 +13,19 @@ class UI:
         self.controller = controller
         self._running = True
         self.screen = None
-        self.size = self.weight, self.height = 720, 720
+        self.size = self.weight, self.height = 1080, 720
         self.offset_pos_x = 20
         self.offset_pos_y = 20
         self.piece_size = 85
+        self.dot_size = 25
+        self.color_text = pygame.Color("White")
         pygame.init()
 
     ###
     #  Method to display the screen
     ###
     def on_init(self):
+        pygame.display.set_caption('Chess Game')
         self.screen = pygame.display.set_mode(
             self.size, pygame.HWSURFACE | pygame.DOUBLEBUF)
         self.update_screen(self.controller.get_board(), [])
@@ -31,6 +35,18 @@ class UI:
     #  This method receives a board and possible moves for a piece that was selected and update the screen according to the data
     ###
     def update_screen(self, board, possible_moves):
+        # print(pygame.font.get_fonts())
+        font = pygame.font.Font('freesansbold.ttf', 20)
+        self.screen.fill(pygame.Color("Black"))
+
+        player = 'white'
+        if (self.controller.current_player == 'b'):
+            player = 'black'
+
+        text = font.render(
+            'Current player: ' + player, False, self.color_text)
+        self.screen.blit(text, (730, 10))
+
         # board
         imp = pygame.image.load(
             "img/board.jpg").convert()
@@ -51,9 +67,44 @@ class UI:
                                       self.offset_pos_y+(self.piece_size*i))
                     self.screen.blit(piece_image, piece_position)
 
+        # Update screen in case of check
+        self.update_screen_check()
         # Update the display
         self.update_screen_possible_moves(possible_moves)
         pygame.display.update()
+
+    ###
+    # Update the screen if there is a check in the board
+    ###
+    def update_screen_check(self):
+        check, king_pos, attacker_pos = self.controller.get_check_data()
+        if (check):
+            font = pygame.font.Font('freesansbold.ttf', 20)
+
+            player = 'white'
+            if (self.controller.current_player == 'b'):
+                player = 'black'
+
+            text = font.render(
+                'Watch out!', False, self.color_text)
+            self.screen.blit(text, (740, 360))
+
+            text = font.render('The ' + player +
+                               ' king is under attack!', False, self.color_text)
+            self.screen.blit(text, (740, 385))
+
+            # Load the piece image
+            piece_image = pygame.image.load(
+                "img/check_dot.png")
+            # Set the dot on the position of the king in danger
+            piece_position = (self.offset_pos_x+self.dot_size+(self.piece_size*king_pos[1]),
+                              self.offset_pos_y+self.dot_size+(self.piece_size*king_pos[0]))
+            self.screen.blit(piece_image, piece_position)
+
+            # Set the dot on the position of the attacker
+            piece_position = (self.offset_pos_x+self.dot_size+(self.piece_size*attacker_pos[1]),
+                              self.offset_pos_y+self.dot_size+(self.piece_size*attacker_pos[0]))
+            self.screen.blit(piece_image, piece_position)
 
     ###
     # Update the screen adding a guide for possible moves for a piece
@@ -65,13 +116,31 @@ class UI:
             piece_image = pygame.image.load(
                 "img/dot.png")
             # Set the position of the piece
-            piece_position = (self.offset_pos_x+28+(self.piece_size*int(move[1])),
-                              self.offset_pos_y+28+(self.piece_size*int(move[0])))
+            piece_position = (self.offset_pos_x+self.dot_size+(self.piece_size*int(move[1])),
+                              self.offset_pos_y+self.dot_size+(self.piece_size*int(move[0])))
             self.screen.blit(piece_image, piece_position)
+
+    def show_checkmate(self):
+        self.screen.fill(pygame.Color("Black"))
+        font = pygame.font.Font('freesansbold.ttf', 30)
+        text = font.render(
+            'Checkmate!', False, self.color_text)
+        self.screen.blit(text, (425, 260))
+
+        text = font.render(self.controller.winner +
+                           ' Wins!', False, self.color_text)
+        self.screen.blit(text, (430, 300))
+
+        text = font.render(
+            'Press any key to start a new game!', False, self.color_text)
+        self.screen.blit(text, (300, 400))
+
+        pygame.display.update()
 
     ###
     #  def of events received from screen
     ###
+
     def on_event(self, event):
         if event.type == pygame.QUIT:
             self._running = False
@@ -83,15 +152,26 @@ class UI:
             btn = pygame.mouse
             print("col = {} board: {}, row = {}  board: {}, btn: {}".format(
                 pos[0], (pos[0]-self.offset_pos_x)//85, pos[1], (pos[1]-self.offset_pos_y)//85, btn.get_pressed()))
-            if ((pos[0]-self.offset_pos_x)//85 >= 0 and (pos[0]-self.offset_pos_x)//85 <= 7 and (pos[1]-self.offset_pos_x)//85 >= 0 and (pos[1]-self.offset_pos_x)//85 <= 7):
+            if ((pos[0]-self.offset_pos_x)//85 >= 0
+                and (pos[0]-self.offset_pos_x)//85 <= 7
+                and (pos[1]-self.offset_pos_x)//85 >= 0
+                    and (pos[1]-self.offset_pos_x)//85 <= 7):
                 possible_moves = self.controller.select_piece(
                     ((pos[1]-self.offset_pos_y)//85), (pos[0]-self.offset_pos_x)//85)
 
-            self.update_screen(board, possible_moves)
+            if (not self.controller.checkmate):
+                self.update_screen(board, possible_moves)
+            else:
+                self.show_checkmate()
+
+        if event.type == pygame.KEYDOWN:
+            self.controller.restart()
+            self.update_screen(self.controller.get_board(), [])
 
     ###
     #  Method to clean up modules of pygame
     ###
+
     def on_cleanup(self):
         pygame.quit()
 
