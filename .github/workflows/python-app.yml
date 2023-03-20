@@ -39,4 +39,5 @@ jobs:
     - name: Test with pytest
       run: |
         pytest Chess/unit_text.py
+        pytest unit_test.py
 
