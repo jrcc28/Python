@@ -131,7 +131,6 @@ class Chess:
                 else:
                     break
 
-
         color = self.board[row][col].color
         moves_to_check = valid_moves
         valid_moves = []
@@ -140,7 +139,7 @@ class Chess:
             is_check = self.is_check(new_board, color)[0]
             if (not is_check):
                 valid_moves.append(move)
-                
+
         return valid_moves
 
     ###
@@ -186,7 +185,7 @@ class Chess:
     ###
     # Checks if a pawn in position row, col has a possibility to eat another piece
     ###
-    def can_pawn_eat(self, row, col, current_player, king=False):
+    def can_pawn_eat(self, row, col, current_player):
         can_eat = []
         direction = 1
         if (self.board[row][col] != None and self.board[row][col].color == 'w'):
@@ -200,15 +199,32 @@ class Chess:
             if (self.board[new_row][col+1].color != self.board[row][col]):
                 can_eat.append((new_row, col+1))
 
-        if (king):
-            can_eat = []
-            if ((col-1) >= 0):
-                can_eat.append((row+direction, col-1))
+        return can_eat
 
-            if ((col+1) <= 7):
-                can_eat.append((row+direction, col+1))
+    ###
+    # can a pawn eat a move from king
+    ###
+    def can_pawn_eat_king(self, row, col):
+        can_eat = []
+        direction = 1
+        if (self.board[row][col] != None and self.board[row][col].color == 'w'):
+            direction = -1
 
-        # print(f'can eat {can_eat}')
+        if ((col-1) >= 0):
+            can_eat.append((row+direction, col-1))
+
+        if ((col+1) <= 7):
+            can_eat.append((row+direction, col+1))
+
+        color = self.board[row][col].color
+        moves_to_check = can_eat
+        can_eat = []
+        for move in moves_to_check:
+            new_board = self.simulate_move(row, col, move[0], move[1])
+            is_check = self.is_check(new_board, color)[0]
+            if (not is_check):
+                can_eat.append(move)
+
         return can_eat
 
     ###
@@ -241,6 +257,10 @@ class Chess:
                 all_enemy_moves = self.get_enemy_moves('b')
             else:
                 all_enemy_moves = self.get_enemy_moves('w')
+
+            # Check for possible positions in which a pawn can eat the king
+            [all_enemy_moves.append(x)
+             for x in self.can_pawn_eat_king(row, col)]
 
             valid_moves_king = valid_moves
             valid_moves = []
@@ -517,8 +537,8 @@ class Chess:
 
     ###
     # Get moves of the piece given in parameter
-    # search_king indicates that we will look for moves of the king, other case that it is false
-    # we will look only for moves of the knight. Also, if it is false, we will get the moves where the pawn can eat
+    # search_king indicates that we will look for moves of the king, in other case that it is false
+    # we will look only for moves of the knight.
     ###
     def get_moves_for_one_piece(self, type, row, col, color, search_king=True):
         moves = []
@@ -536,9 +556,6 @@ class Chess:
                 if (search_king):
                     [moves.append(x) for x in self.get_pawn_moves(
                         color, row, col)]
-                else:  # Check for possible positions that the pawn can eat
-                    [moves.append(x) for x in self.can_pawn_eat(
-                        row, col, color, True)]
             case _:
                 if (search_king):
                     [moves.append(x) for x in self.get_moves(
@@ -554,7 +571,7 @@ class Chess:
     def is_checkmate(self, color):
         # Check if the king is in check
         if not self.is_check(self.board, color)[0]:
-            # print('It is not a check')
+            print('It is not a check')
             return False
 
         pos = self.find_king(color)
@@ -562,7 +579,7 @@ class Chess:
 
         # Check if the king can escape check
         if (len(king_moves) > 0):
-            # print(f'black king_moves {king_moves}')
+            print(f'black king_moves {king_moves}')
             return False
 
         if (color == 'w'):
@@ -583,7 +600,8 @@ class Chess:
                 for move in moves:
                     new_board = self.simulate_move(row, col, move[0], move[1])
                     if not self.is_check(new_board, color)[0]:
-                        # print('There are possible moves or blocks')
+                        print(
+                            f'There are possible moves or blocks {row}{col} to {move}')
                         return False
 
         # If none of the above conditions are met, it's checkmate

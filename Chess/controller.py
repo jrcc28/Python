@@ -79,11 +79,10 @@ class Controller:
             "b") or self.chess.is_checkmate("w")
 
         if (self.checkmate):
-            print('Checkmate!')
             if (self.current_player == 'w'):
-                self.winner = "White"
+                self.winner = "Black"
             else:
-                self.winner = 'Black'
+                self.winner = 'White'
 
         self.possible_moves = []
 
