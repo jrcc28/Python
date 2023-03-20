@@ -75,8 +75,10 @@ class Controller:
                 board, "b")
 
         # Check the board for a checkmate
-        self.checkmate = self.chess.is_checkmate(
-            "b") or self.chess.is_checkmate("w")
+        if (self.current_player == 'w'):
+            self.checkmate = self.chess.is_checkmate("b")
+        else:
+            self.checkmate = self.chess.is_checkmate("w")
 
         if (self.checkmate):
             if (self.current_player == 'w'):
@@ -115,7 +117,7 @@ class Controller:
                 for move in self.chess.can_pawn_eat(row, col, self.current_player):
                     self.possible_moves.append(move)
 
-        # print(self.possible_moves)
+        print(self.possible_moves)
         return self.possible_moves
 
     def restart(self):

@@ -522,15 +522,15 @@ class Chess:
     ###
     # Get moves of the pieces of the given color
     # This method doesn't consider king moves
-    # Also, gives the moves where a pawn can eat
+    # Also, it doesn't consider pawns moves
     ###
-    def get_enemy_moves(self, color):
+    def get_enemy_moves(self, color, search_all=False):
         moves = []
         for row in range(8):
             for col in range(8):
                 if (self.board[row][col] != None and self.board[row][col].color == color):
                     [moves.append(x) for x in self.get_moves_for_one_piece(
-                        self.board[row][col].type, row, col, color, False)]
+                        self.board[row][col].type, row, col, color, search_all)]
 
         # Return a list of possible moves without duplicate values
         return list(set(moves))
@@ -571,7 +571,7 @@ class Chess:
     def is_checkmate(self, color):
         # Check if the king is in check
         if not self.is_check(self.board, color)[0]:
-            print('It is not a check')
+            # print('It is not a check')
             return False
 
         pos = self.find_king(color)
@@ -596,7 +596,11 @@ class Chess:
                     continue
                 moves = self.get_moves_for_one_piece(
                     self.board[row][col].type, row, col, color, False)
-                # print(moves)
+                print(self.board[row][col].type)
+                if (self.board[row][col] != None and self.board[row][col] == 'pawn'):
+                    [moves.append(x) for x in self.get_pawn_moves(
+                        color, row, col)]
+                print(moves)
                 for move in moves:
                     new_board = self.simulate_move(row, col, move[0], move[1])
                     if not self.is_check(new_board, color)[0]:
@@ -618,6 +622,9 @@ class Chess:
 
 
 # chess = Chess()
+# print(chess.get_enemy_moves('b', True))
+# print(chess.get_enemy_moves('w', True))
+
 # chess.move_piece(6, 4, 4, 4)
 # chess.move_piece(1, 5, 3, 5)
 # chess.move_piece(7, 3, 3, 7)
