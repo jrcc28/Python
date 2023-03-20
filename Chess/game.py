@@ -130,6 +130,17 @@ class Chess:
                     break
                 else:
                     break
+
+
+        color = self.board[row][col].color
+        moves_to_check = valid_moves
+        valid_moves = []
+        for move in moves_to_check:
+            new_board = self.simulate_move(row, col, move[0], move[1])
+            is_check = self.is_check(new_board, color)[0]
+            if (not is_check):
+                valid_moves.append(move)
+                
         return valid_moves
 
     ###
@@ -157,6 +168,15 @@ class Chess:
                     valid_moves.append((row + (move[0]*x), col))
                     if (self.board[row + (move[0]*x)+x][col] == None):
                         valid_moves.append((row + (move[0]*x) + x, col))
+
+        color = self.board[row][col].color
+        moves_to_check = valid_moves
+        valid_moves = []
+        for move in moves_to_check:
+            new_board = self.simulate_move(row, col, move[0], move[1])
+            is_check = self.is_check(new_board, color)[0]
+            if (not is_check):
+                valid_moves.append(move)
 
         if (check):
             valid_moves = self.can_pawn_eat(row, col, color)
@@ -216,11 +236,6 @@ class Chess:
             elif (self.board[new_row][new_col].color != self.board[row][col].color):
                 valid_moves.append((new_row, new_col))
 
-        if (piece == "pawn" and (row == 1 or row == 6)):
-            valid_moves = []
-            valid_moves.append((row + (move[0]*x), col))
-            valid_moves.append((row + (move[0]*x) + x, col))
-
         if (piece == "king"):
             if (color == 'w'):
                 all_enemy_moves = self.get_enemy_moves('b')
@@ -231,6 +246,15 @@ class Chess:
             valid_moves = []
             [valid_moves.append(elem)
              for elem in valid_moves_king if elem not in all_enemy_moves]
+        else:
+            color = self.board[row][col].color
+            moves_to_check = valid_moves
+            valid_moves = []
+            for move in moves_to_check:
+                new_board = self.simulate_move(row, col, move[0], move[1])
+                is_check = self.is_check(new_board, color)[0]
+                if (not is_check):
+                    valid_moves.append(move)
 
         return valid_moves
 
@@ -275,6 +299,16 @@ class Chess:
                 break
             else:
                 break
+
+        color = self.board[row][col].color
+        moves_to_check = valid_moves
+        valid_moves = []
+        for move in moves_to_check:
+            new_board = self.simulate_move(row, col, move[0], move[1])
+            is_check = self.is_check(new_board, color)[0]
+            if (not is_check):
+                valid_moves.append(move)
+
         return valid_moves
 
     ###
@@ -366,6 +400,16 @@ class Chess:
                 break
             r += 1
             c += 1
+
+        color = self.board[row][col].color
+        moves_to_check = valid_moves
+        valid_moves = []
+        for move in moves_to_check:
+            new_board = self.simulate_move(row, col, move[0], move[1])
+            is_check = self.is_check(new_board, color)[0]
+            if (not is_check):
+                valid_moves.append(move)
+
         return valid_moves
 
     ###
