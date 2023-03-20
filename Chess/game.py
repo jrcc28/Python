@@ -1,4 +1,3 @@
-import numpy as np
 import copy
 
 from piece import Piece
@@ -18,14 +17,14 @@ class Chess:
     ###
     def start_board(self):
         # def of pieces in the board
-        self.board = np.array([[None] * 8,
-                               [None] * 8,
-                               [None] * 8,
-                               [None] * 8,
-                               [None] * 8,
-                               [None] * 8,
-                               [None] * 8,
-                               [None] * 8])
+        self.board = ([[None] * 8,
+                       [None] * 8,
+                       [None] * 8,
+                       [None] * 8,
+                       [None] * 8,
+                       [None] * 8,
+                       [None] * 8,
+                       [None] * 8])
         # Pawns
         # Iterate over each column of the current row
         for j in range(len(self.board[0])):

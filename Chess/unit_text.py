@@ -149,7 +149,7 @@ class Testing(unittest.TestCase):
 
         chess.move_piece(1, 7, 2, 6)
         is_check = chess.is_check(chess.board, 'b')
-        self.assertFalse(is_check)
+        self.assertFalse(is_check[0])
 
 
 if __name__ == '__main__':
