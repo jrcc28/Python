@@ -231,6 +231,7 @@ class Chess:
     ###
     def get_moves(self, piece, color, row, col):
         valid_moves = []
+
         x = 1  # variable to def direction of the pieces
         # Define the moves for each piece
         moves = {
@@ -258,11 +259,31 @@ class Chess:
                 all_enemy_moves = self.get_enemy_moves('w')
 
             # Check for possible positions in which a pawn can eat the king
-            for row in range(8):
-                for col in range(8):
-                    if (self.board[row][col] != None and self.board[row][col].color != color and self.board[row][col].type == 'pawn'):
+            for row_test in range(8):
+                for col_test in range(8):
+                    if (self.board[row_test][col_test] != None and self.board[row_test][col_test].color != color and self.board[row_test][col_test].type == 'pawn'):
                         [all_enemy_moves.append(x)
-                         for x in self.can_pawn_eat_king(row, col)]
+                         for x in self.can_pawn_eat_king(row_test, col_test)]
+
+            # Check for castiling
+            if (color == 'w'):
+                is_castling_left = self.castling(
+                    (7, 4), (7, 0))[0]
+                is_castling_right = self.castling(
+                    (7, 4), (7, 7))[0]
+                if (is_castling_left):
+                    valid_moves.append((7, 0))
+                if (is_castling_right):
+                    valid_moves.append((7, 7))
+            else:
+                is_castling_left = self.castling(
+                    (0, 4), (0, 0))[0]
+                is_castling_right = self.castling(
+                    (0, 4), (0, 7))[0]
+                if (is_castling_left):
+                    valid_moves.append((0, 0))
+                if (is_castling_right):
+                    valid_moves.append((0, 7))
 
             valid_moves_king = valid_moves
             valid_moves = []
@@ -438,8 +459,27 @@ class Chess:
     # Move a piece from position origin_row, origin_col to row, col
     ###
     def move_piece(self, origin_row, origin_col, row, col):
-        self.board[row][col] = self.board[origin_row][origin_col]
-        self.board[origin_row][origin_col] = None
+        is_castling = False
+        # if origin = king and destiny = tower
+        if (self.board[origin_row][origin_col] != None
+            and self.board[origin_row][origin_col].type == 'king'
+            and self.board[row][col] != None
+                and self.board[row][col].type == 'rook'):
+            is_castling, new_king_position, new_rook_position = self.castling(
+                (origin_row, origin_col), (row, col))
+            # print(f'{is_castling = } {new_king_position = } {new_rook_position = }')
+
+        if (is_castling):
+            # Move the king and rook to their new positions
+            self.board[new_king_position[0]][new_king_position[1]
+                                             ] = self.board[origin_row][origin_col]
+            self.board[new_rook_position[0]
+                       ][new_rook_position[1]] = self.board[row][col]
+            self.board[origin_row][origin_col] = None
+            self.board[row][col] = None
+        else:
+            self.board[row][col] = self.board[origin_row][origin_col]
+            self.board[origin_row][origin_col] = None
         return 0
 
     ###
@@ -629,8 +669,44 @@ class Chess:
             attacker = 'b'
 
         # check if any legal moves are possible
-        for move in self.get_enemy_moves(attacker):
+        if len(self.get_enemy_moves(attacker)) > 0:
             # if there's at least one legal move, it's not a stalemate
             return False
         # if no legal moves and not in check, it's a stalemate
         return True
+
+    def castling(self, king_position, rook_position):
+        false_pos = (-1, -1)
+
+        if (self.board[king_position[0]][4] == None or self.board[rook_position[0]][rook_position[1]] == None):
+            return False, false_pos, false_pos
+
+        # Determine the direction of castling
+        if rook_position[1] < king_position[1]:
+            # Queenside castling
+            new_king_position = (king_position[0], 2)
+            new_rook_position = (rook_position[0], rook_position[1]+3)
+            path = [(king_position[0], 1),
+                    (king_position[0], 2),
+                    (king_position[0], 3)]
+        else:
+            # Kingside castling
+            new_king_position = (king_position[0], 6)
+            new_rook_position = (rook_position[0], rook_position[1]-2)
+            path = [(king_position[0], 5),
+                    (king_position[0], 6)]
+
+        # Check if the squares between the king and rook are empty
+        # print(f'{path = } {king_position = }')
+        for square in path:
+            if self.board[square[0]][square[1]] != None:
+                return False, false_pos, false_pos
+
+        # Check if the king and rook have not moved yet
+        if (self.board[king_position[0]][4] != None
+            and self.board[king_position[0]][4].type != 'king'
+            or self.board[rook_position[0]][rook_position[1]] != None
+                and self.board[rook_position[0]][rook_position[1]].type != 'rook'):
+            return False, false_pos, false_pos
+
+        return True, new_king_position, new_rook_position

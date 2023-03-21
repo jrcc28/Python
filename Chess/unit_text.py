@@ -91,7 +91,6 @@ class Testing(unittest.TestCase):
         valid_moves = [(0, 4), (0, 3)]
         self.assertEqual(king_moves, valid_moves)
 
-        # chess.move_piece(6, 4, 5, 4)
         chess.move_piece(1, 3, 2, 3)
 
         king_moves = chess.get_moves('king', 'w', 6, 4)
@@ -153,6 +152,40 @@ class Testing(unittest.TestCase):
         chess.move_piece(1, 7, 2, 6)
         is_check = chess.is_check(chess.board, 'b')
         self.assertFalse(is_check[0])
+
+    def test_castling(self):
+        chess = Chess()
+        chess.move_piece(6, 4, 4, 4)
+        chess.move_piece(1, 3, 3, 3)
+        chess.move_piece(7, 5, 4, 2)
+        chess.move_piece(0, 2, 3, 5)
+        chess.move_piece(7, 6, 5, 5)
+        chess.move_piece(0, 1, 2, 0)
+        chess.move_piece(0, 1, 2, 0)
+
+        valid_moves = [(6, 4), (7, 5), (7, 7)]
+        castling_moves = chess.get_moves('king', 'w', 7, 4)
+        self.assertEqual(valid_moves, castling_moves)
+
+        chess.move_piece(7, 4, 7, 7)
+        chess.move_piece(0, 3, 2, 3)
+
+        valid_moves = [(7, 7)]
+        castling_moves = chess.get_moves('king', 'w', 7, 6)
+        self.assertEqual(valid_moves, castling_moves)
+
+        chess.move_piece(7, 6, 7, 7)
+
+        valid_moves = [(0, 3), (1, 3), (0, 0)]
+        castling_moves = chess.get_moves('king', 'b', 0, 4)
+        self.assertEqual(valid_moves, castling_moves)
+
+        chess.move_piece(0, 4, 0, 0)
+        chess.move_piece(4, 2, 5, 1)
+
+        valid_moves = [(0, 1), (1, 3)]
+        castling_moves = chess.get_moves('king', 'b', 0, 2)
+        self.assertEqual(valid_moves, castling_moves)
 
 
 if __name__ == '__main__':

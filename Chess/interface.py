@@ -137,10 +137,22 @@ class UI:
 
         pygame.display.update()
 
+    def show_tables(self):
+        self.screen.fill(pygame.Color("Black"))
+        font = pygame.font.Font('freesansbold.ttf', 30)
+        text = font.render(
+            'It is a tie!', False, self.color_text)
+        self.screen.blit(text, (425, 260))
+
+        text = font.render(
+            'Press any key to start a new game!', False, self.color_text)
+        self.screen.blit(text, (300, 400))
+
+        pygame.display.update()
+
     ###
     #  def of events received from screen
     ###
-
     def on_event(self, event):
         if event.type == pygame.QUIT:
             self._running = False
@@ -159,9 +171,11 @@ class UI:
                 possible_moves = self.controller.select_piece(
                     ((pos[1]-self.offset_pos_y)//85), (pos[0]-self.offset_pos_x)//85)
 
-            if (not self.controller.checkmate):
+            if (not self.controller.checkmate and not self.controller.tables):
                 self.update_screen(board, possible_moves)
-            else:
+            elif (self.controller.tables):
+                self.show_tables()
+            elif (self.controller.checkmate):
                 self.show_checkmate()
 
         if event.type == pygame.KEYDOWN:
