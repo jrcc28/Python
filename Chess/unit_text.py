@@ -91,14 +91,17 @@ class Testing(unittest.TestCase):
         valid_moves = [(0, 4), (0, 3)]
         self.assertEqual(king_moves, valid_moves)
 
-        chess.move_piece(6, 4, 5, 4)
+        # chess.move_piece(6, 4, 5, 4)
         chess.move_piece(1, 3, 2, 3)
 
-        king_moves = chess.get_moves('king', 'w', 5, 4)
-        valid_moves = [(4, 4), (6, 4), (5, 5), (6, 3)]
+        king_moves = chess.get_moves('king', 'w', 6, 4)
+        valid_moves = [(5, 4), (6, 3), (7, 4), (5, 5), (7, 3)]
         self.assertEqual(king_moves, valid_moves)
 
-        pawn_moves = chess.get_pawn_moves('b', 5, 3)
+        chess.move_piece(6, 4, 5, 4)
+        chess.move_piece(1, 5, 3, 5)
+
+        pawn_moves = chess.get_pawn_moves('w', 5, 3)
         valid_moves = []
         self.assertEqual(pawn_moves, valid_moves)
 

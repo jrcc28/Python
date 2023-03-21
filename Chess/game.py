@@ -1,5 +1,5 @@
 import copy
-
+import numpy as np
 from piece import Piece
 
 
@@ -17,14 +17,14 @@ class Chess:
     ###
     def start_board(self):
         # def of pieces in the board
-        self.board = ([[None] * 8,
-                       [None] * 8,
-                       [None] * 8,
-                       [None] * 8,
-                       [None] * 8,
-                       [None] * 8,
-                       [None] * 8,
-                       [None] * 8])
+        self.board = np.array([[None] * 8,
+                               [None] * 8,
+                               [None] * 8,
+                               [None] * 8,
+                               [None] * 8,
+                               [None] * 8,
+                               [None] * 8,
+                               [None] * 8])
         # Pawns
         # Iterate over each column of the current row
         for j in range(len(self.board[0])):
@@ -187,15 +187,15 @@ class Chess:
     def can_pawn_eat(self, row, col, current_player):
         can_eat = []
         direction = 1
-        if (self.board[row][col] != None and self.board[row][col].color == 'w'):
+        if (self.board[row][col].color == 'w'):
             direction = -1
 
         new_row = row+direction
-        if ((col-1) >= 0 and self.board[new_row][col-1] != None and self.board[new_row][col-1].color != current_player):
-            if (self.board[new_row][col-1].color != self.board[row][col]):
-                can_eat.append((row+direction, col-1))
-        if ((col+1) <= 7 and self.board[new_row][col+1] != None and self.board[new_row][col+1].color != current_player):
-            if (self.board[new_row][col+1].color != self.board[row][col]):
+        if ((col-1) >= 0 and self.board[new_row][col-1] != None):
+            if (self.board[new_row][col-1].color != self.board[row][col].color):
+                can_eat.append((new_row, col-1))
+        if ((col+1) <= 7 and self.board[new_row][col+1] != None):
+            if (self.board[new_row][col+1].color != self.board[row][col].color):
                 can_eat.append((new_row, col+1))
 
         return can_eat
@@ -248,7 +248,7 @@ class Chess:
                 continue
             if (self.board[new_row][new_col] == None):
                 valid_moves.append((new_row, new_col))
-            elif (self.board[new_row][new_col].color != self.board[row][col].color):
+            elif (self.board[new_row][new_col] != None and self.board[row][col] != None and self.board[new_row][new_col].color != self.board[row][col].color):
                 valid_moves.append((new_row, new_col))
 
         if (piece == "king"):
@@ -258,8 +258,11 @@ class Chess:
                 all_enemy_moves = self.get_enemy_moves('w')
 
             # Check for possible positions in which a pawn can eat the king
-            [all_enemy_moves.append(x)
-             for x in self.can_pawn_eat_king(row, col)]
+            for row in range(8):
+                for col in range(8):
+                    if (self.board[row][col] != None and self.board[row][col].color != color and self.board[row][col].type == 'pawn'):
+                        [all_enemy_moves.append(x)
+                         for x in self.can_pawn_eat_king(row, col)]
 
             valid_moves_king = valid_moves
             valid_moves = []
@@ -521,7 +524,6 @@ class Chess:
     ###
     # Get moves of the pieces of the given color
     # This method doesn't consider king moves
-    # Also, it doesn't consider pawns moves
     ###
     def get_enemy_moves(self, color, search_all=False):
         moves = []
@@ -539,7 +541,7 @@ class Chess:
     # search_king indicates that we will look for moves of the king, in other case that it is false
     # we will look only for moves of the knight.
     ###
-    def get_moves_for_one_piece(self, type, row, col, color, search_king=True):
+    def get_moves_for_one_piece(self, type, row, col, color, search_king=True, pawns_moves=True):
         moves = []
         match type:
             case "rook":
@@ -552,7 +554,7 @@ class Chess:
                 [moves.append(x) for x in self.get_bishop_moves(
                     row, col)]
             case "pawn":
-                if (search_king):
+                if (pawns_moves):
                     [moves.append(x) for x in self.get_pawn_moves(
                         color, row, col)]
             case _:
@@ -594,12 +596,10 @@ class Chess:
                 if (self.board[row][col].color == attacking_color):
                     continue
                 moves = self.get_moves_for_one_piece(
-                    self.board[row][col].type, row, col, color, False)
-                print(self.board[row][col].type)
-                if (self.board[row][col] != None and self.board[row][col] == 'pawn'):
-                    [moves.append(x) for x in self.get_pawn_moves(
-                        color, row, col)]
-                print(moves)
+                    self.board[row][col].type, row, col, color, False, True)
+                # if (self.board[row][col] != None and self.board[row][col] == 'pawn'):
+                #     [moves.append(x) for x in self.get_pawn_moves(
+                #         color, row, col)]
                 for move in moves:
                     new_board = self.simulate_move(row, col, move[0], move[1])
                     if not self.is_check(new_board, color)[0]:
@@ -619,21 +619,18 @@ class Chess:
         simulated_board[origin_row][origin_col] = None
         return simulated_board
 
+    def is_stalemate(self, current_player):
+        # check if current player is in check
+        if self.is_check(self.board, current_player):
+            return False  # if in check, it's not a stalemate
 
-# chess = Chess()
-# print(chess.get_enemy_moves('b', True))
-# print(chess.get_enemy_moves('w', True))
+        attacker = 'w'
+        if (current_player == 'w'):
+            attacker = 'b'
 
-# chess.move_piece(6, 4, 4, 4)
-# chess.move_piece(1, 5, 3, 5)
-# chess.move_piece(7, 3, 3, 7)
-# chess.move_piece(1, 6, 2, 7)
-# chess.print_board(chess.board)
-# # chess.move_piece(7, 6, 5, 5)
-# # chess.move_piece(0, 3, 3, 6)
-# # chess.move_piece(6, 4, 5, 4)
-# # chess.move_piece(1, 5, 2, 5)
-# # chess.move_piece(7, 3, 5, 3)
-# # chess.move_piece(0, 1, 2, 2)
-# # chess.move_piece(5, 3, 5, 0)
-# print(chess.is_checkmate('b'))
+        # check if any legal moves are possible
+        for move in self.get_enemy_moves(attacker):
+            # if there's at least one legal move, it's not a stalemate
+            return False
+        # if no legal moves and not in check, it's a stalemate
+        return True
