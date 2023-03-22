@@ -10,6 +10,7 @@ class Chess:
     # Constructor
     ###
     def __init__(self):
+        self.convert_pawn = False
         self.start_board()
 
     ###
@@ -164,7 +165,7 @@ class Chess:
                 valid_moves = []
                 if (self.board[row + (move[0]*x)][col] == None):
                     valid_moves.append((row + (move[0]*x), col))
-                    if (self.board[row + (move[0]*x)+x][col] == None):
+                    if (((row + (move[0]*x)+x) < 8 and (row + (move[0]*x)+x) >= 0) and self.board[row + (move[0]*x)+x][col] == None):
                         valid_moves.append((row + (move[0]*x) + x, col))
 
         color = self.board[row][col].color
@@ -460,6 +461,7 @@ class Chess:
     ###
     def move_piece(self, origin_row, origin_col, row, col):
         is_castling = False
+
         # if origin = king and destiny = tower
         if (self.board[origin_row][origin_col] != None
             and self.board[origin_row][origin_col].type == 'king'
@@ -480,6 +482,14 @@ class Chess:
         else:
             self.board[row][col] = self.board[origin_row][origin_col]
             self.board[origin_row][origin_col] = None
+
+            if (self.board[row][col].color == 'w'):
+                if (self.board[row][col].type == 'pawn' and row == 0):
+                    self.convert_pawn = True
+            else:
+                if (self.board[row][col].type == 'pawn' and row == 7):
+                    self.convert_pawn = True
+
         return 0
 
     ###
@@ -710,3 +720,6 @@ class Chess:
             return False, false_pos, false_pos
 
         return True, new_king_position, new_rook_position
+
+    def convert_pawn_to_another(self, piece, row, col):
+        self.board[row][col].type = piece

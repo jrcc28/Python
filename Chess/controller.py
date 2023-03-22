@@ -19,6 +19,7 @@ class Controller:
         self.king_in_danger = (-1, -1)
         self.attacker = (-1, -1)
         self.tables = False
+        self.convert_pawn = False
         self.chess = Chess()
         self.interface = UI(self)
         self.interface.on_execute()
@@ -90,6 +91,8 @@ class Controller:
         if (self.tables):
             self.checkmate = True
 
+        self.convert_pawn = self.chess.convert_pawn
+
         self.possible_moves = []
 
     ###
@@ -140,6 +143,19 @@ class Controller:
         print(self.possible_moves)
         return self.possible_moves
 
+    def convert_pawn_to(self, option, row, col):
+        self.convert_pawn = False
+        self.chess.convert_pawn = False
+        match option:
+            case 1:
+                self.chess.convert_pawn_to_another('queen', row, col)
+            case 2:
+                self.chess.convert_pawn_to_another('knight', row, col)
+            case 3:
+                self.chess.convert_pawn_to_another('bishop', row, col)
+            case 4:
+                self.chess.convert_pawn_to_another('rook', row, col)
+
     def restart(self):
         del self.chess
         self.chess = Chess()
@@ -152,6 +168,7 @@ class Controller:
         self.winner = ''
         self.check = False
         self.tables = False
+        self.convert_pawn = False
         self.king_in_danger = (-1, -1)
         self.attacker = (-1, -1)
 

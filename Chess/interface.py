@@ -14,6 +14,7 @@ class UI:
         self._running = True
         self.screen = None
         self.size = self.weight, self.height = 1080, 720
+        self.need_option = False
         self.offset_pos_x = 20
         self.offset_pos_y = 20
         self.piece_size = 85
@@ -67,8 +68,12 @@ class UI:
                                       self.offset_pos_y+(self.piece_size*i))
                     self.screen.blit(piece_image, piece_position)
 
+        # Update screen in case that a pawn can be converted
+        self.show_convert_pawn_options()
+
         # Update screen in case of check
         self.update_screen_check()
+
         # Update the display
         self.update_screen_possible_moves(possible_moves)
         pygame.display.update()
@@ -162,25 +167,72 @@ class UI:
             possible_moves = []
             pos = pygame.mouse.get_pos()
             btn = pygame.mouse
+            pos_col = (pos[0]-self.offset_pos_x)//85
+            pos_row = (pos[1]-self.offset_pos_y)//85
             print("col = {} board: {}, row = {}  board: {}, btn: {}".format(
                 pos[0], (pos[0]-self.offset_pos_x)//85, pos[1], (pos[1]-self.offset_pos_y)//85, btn.get_pressed()))
-            if ((pos[0]-self.offset_pos_x)//85 >= 0
-                and (pos[0]-self.offset_pos_x)//85 <= 7
-                and (pos[1]-self.offset_pos_x)//85 >= 0
-                    and (pos[1]-self.offset_pos_x)//85 <= 7):
+            if (pos_col >= 0
+                and pos_col <= 7
+                and pos_row >= 0
+                    and pos_row <= 7):
                 possible_moves = self.controller.select_piece(
-                    ((pos[1]-self.offset_pos_y)//85), (pos[0]-self.offset_pos_x)//85)
+                    pos_row, pos_col)
 
             if (not self.controller.checkmate and not self.controller.tables):
                 self.update_screen(board, possible_moves)
+
+                if (self.need_option):
+                    self.wait_for_option(pos_row, pos_col)
+
             elif (self.controller.tables):
                 self.show_tables()
             elif (self.controller.checkmate):
                 self.show_checkmate()
 
         if event.type == pygame.KEYDOWN:
-            self.controller.restart()
-            self.update_screen(self.controller.get_board(), [])
+            if (self.controller.checkmate and self.controller.tables):
+                self.controller.restart()
+                self.update_screen(self.controller.get_board(), [])
+
+    def show_convert_pawn_options(self):
+        if (self.controller.convert_pawn):
+            # self.controller.convert_pawn_to()
+            font = pygame.font.Font('freesansbold.ttf', 20)
+            text = "Pawn can be converted!\nSelect an option by\nentering the corresponding\nnumber:\n1.Queen\n2.Knight\n3.bishop\n4.rook"
+            lines = text.splitlines()
+            for i, l in enumerate(lines):
+                text_to_show = font.render(l, False, self.color_text)
+                self.screen.blit(text_to_show, (740, 300 + 25*i))
+
+            self.need_option = True
+
+    def wait_for_option(self, pos_row, pos_col):
+        while True:
+            event = pygame.event.wait()
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            elif event.type == pygame.KEYDOWN:
+                if (event.key == pygame.K_1 or event.key == pygame.K_KP1):
+                    self.controller.convert_pawn_to(1, pos_row, pos_col)
+                    self.need_option = False
+                    break
+
+                if (event.key == pygame.K_2 or event.key == pygame.K_KP2):
+                    self.controller.convert_pawn_to(2, pos_row, pos_col)
+                    self.need_option = False
+                    break
+
+                if (event.key == pygame.K_3 or event.key == pygame.K_KP3):
+                    self.controller.convert_pawn_to(3, pos_row, pos_col)
+                    self.need_option = False
+                    break
+
+                if (event.key == pygame.K_4 or event.key == pygame.K_KP4):
+                    self.controller.convert_pawn_to(4, pos_row, pos_col)
+                    self.need_option = False
+                    break
+
+        self.update_screen(self.controller.get_board(), [])
 
     ###
     #  Method to clean up modules of pygame
