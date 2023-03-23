@@ -18,6 +18,8 @@ class Controller:
         self.check = False
         self.king_in_danger = (-1, -1)
         self.attacker = (-1, -1)
+        self.tables = False
+        self.convert_pawn = False
         self.chess = Chess()
         self.interface = UI(self)
         self.interface.on_execute()
@@ -52,19 +54,16 @@ class Controller:
     def second_move(self, row, col, board):
         self.selected_piece = False
         if (self.current_player == "w"):
-            print((row, col) in self.possible_moves)
             if ((board[row][col] == None or board[row][col].color == "b") and (row, col) in self.possible_moves):
                 print("white piece moved")
                 self.chess.move_piece(
                     self.selected_piece_row, self.selected_piece_col, row, col)
-                # print(f'is check for b {self.check}')
                 self.current_player = "b"
         else:
             if ((board[row][col] == None or board[row][col].color == "w") and (row, col) in self.possible_moves):
                 print("black piece moved")
                 self.chess.move_piece(
                     self.selected_piece_row, self.selected_piece_col, row, col)
-                # print(f'is check for w {self.check}')
                 self.current_player = "w"
 
         # Verify a check
@@ -86,6 +85,14 @@ class Controller:
             else:
                 self.winner = 'White'
 
+        self.tables = self.chess.is_stalemate(
+            'w') or self.chess.is_stalemate('b')
+
+        if (self.tables):
+            self.checkmate = True
+
+        self.convert_pawn = self.chess.convert_pawn
+
         self.possible_moves = []
 
     ###
@@ -100,6 +107,22 @@ class Controller:
             return []
 
         board = self.get_board()
+
+        # move in case of castling
+        if ((row, col) in self.possible_moves
+            and board[row][col] != None
+            and board[row][col].type == 'rook'
+            and board[self.selected_piece_row][self.selected_piece_col] != None
+                and board[self.selected_piece_row][self.selected_piece_col].type == 'king'):
+            self.chess.move_piece(
+                self.selected_piece_row, self.selected_piece_col, row, col)
+            if (self.current_player == 'w'):
+                self.current_player = "b"
+            else:
+                self.current_player = "w"
+            self.selected_piece = False
+
+            return []
 
         # Another piece was selected, the var selected_piece will be reset
         if (self.selected_piece and board[row][col] != None and board[row][col].color == self.current_player):
@@ -120,6 +143,19 @@ class Controller:
         print(self.possible_moves)
         return self.possible_moves
 
+    def convert_pawn_to(self, option, row, col):
+        self.convert_pawn = False
+        self.chess.convert_pawn = False
+        match option:
+            case 1:
+                self.chess.convert_pawn_to_another('queen', row, col)
+            case 2:
+                self.chess.convert_pawn_to_another('knight', row, col)
+            case 3:
+                self.chess.convert_pawn_to_another('bishop', row, col)
+            case 4:
+                self.chess.convert_pawn_to_another('rook', row, col)
+
     def restart(self):
         del self.chess
         self.chess = Chess()
@@ -131,6 +167,8 @@ class Controller:
         self.checkmate = False
         self.winner = ''
         self.check = False
+        self.tables = False
+        self.convert_pawn = False
         self.king_in_danger = (-1, -1)
         self.attacker = (-1, -1)
 
